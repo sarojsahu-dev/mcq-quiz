@@ -2,6 +2,11 @@
 
 A modern Android quiz application built with **Jetpack Compose**, **MVVM Clean Architecture**, and **Dagger Hilt**. The app features an engaging UI with streak tracking, animations, and a delightful user experience.
 
+## 📥 Download & Demo
+
+📱 **[Download APK](https://drive.google.com/file/d/14530CvRTtzRSQ7cP_3pWWyQ9n5-elUnZ/view?usp=sharing)**  
+🎥 **[Watch Demo Video](https://drive.google.com/file/d/12S9kIvOJG5rCvTGdeHhk3GuW3GdMkZES/view?usp=sharing)**
+
 ## 🎯 Features
 
 
