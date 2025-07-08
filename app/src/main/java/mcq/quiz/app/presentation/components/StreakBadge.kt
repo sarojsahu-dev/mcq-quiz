@@ -1,16 +1,27 @@
 package mcq.quiz.app.presentation.components
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Whatshot
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,13 +39,12 @@ fun StreakBadge(
 ) {
     val infiniteTransition = rememberInfiniteTransition()
 
-    // Different animations based on streak level
     val scale by infiniteTransition.animateFloat(
         initialValue = 1f,
         targetValue = when {
-            currentStreak >= 5 -> 1.15f  // Super streak
-            isActive -> 1.1f              // Active streak
-            else -> 1f                    // Normal
+            currentStreak >= 5 -> 1.15f
+            isActive -> 1.1f
+            else -> 1f
         },
         animationSpec = infiniteRepeatable(
             animation = tween(if (currentStreak >= 5) 600 else 800),
@@ -42,24 +52,14 @@ fun StreakBadge(
         )
     )
 
-    // Fire effect for high streaks
-    val fireRotation by infiniteTransition.animateFloat(
-        initialValue = -5f,
-        targetValue = 5f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(400),
-            repeatMode = RepeatMode.Reverse
-        )
-    )
-
     val (backgroundColor, contentColor, icon) = when {
         currentStreak >= 5 -> Triple(
-            Color(0xFFFF5722), // Deep orange for fire
+            Color(0xFFFF5722),
             Color.White,
             Icons.Default.Whatshot
         )
         isActive -> Triple(
-            Color(0xFFFFD700), // Gold
+            Color(0xFFFFD700),
             Color.Black,
             Icons.Default.Star
         )
@@ -72,7 +72,6 @@ fun StreakBadge(
 
     Box(modifier = modifier) {
         if (currentStreak >= 5) {
-            // Particle effects
             repeat(3) { index ->
                 val particleScale by infiniteTransition.animateFloat(
                     initialValue = 0.5f,

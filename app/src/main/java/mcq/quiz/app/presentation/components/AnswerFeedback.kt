@@ -104,7 +104,6 @@ fun AnswerFeedback(
                     .scale(scale)
             )
 
-            // Feedback text
             Text(
                 text = if (isCorrect) {
                     when {
@@ -120,7 +119,6 @@ fun AnswerFeedback(
                 color = Color.White
             )
 
-            // Streak celebration
             if (isCorrect && currentStreak >= 3) {
                 Card(
                     colors = CardDefaults.cardColors(

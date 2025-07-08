@@ -57,7 +57,6 @@ class QuizViewModel @Inject constructor(
         )
 
         viewModelScope.launch {
-            // Show processing for a moment
             delay(500)
 
             val isCorrect = answerIndex == currentQuestion.correctOptionIndex
