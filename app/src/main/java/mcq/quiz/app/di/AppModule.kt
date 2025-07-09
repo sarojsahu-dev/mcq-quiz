@@ -1,12 +1,15 @@
 package mcq.quiz.app.di
 
+import android.content.Context
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import mcq.quiz.app.data.remote.QuizApi
 import mcq.quiz.app.data.repository.QuizRepositoryImpl
 import mcq.quiz.app.domain.repository.QuizRepository
+import mcq.quiz.app.utils.NetworkStatusTracker
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -53,5 +56,11 @@ object AppModule {
     @Singleton
     fun provideQuizRepository(api: QuizApi): QuizRepository {
         return QuizRepositoryImpl(api)
+    }
+
+    @Provides
+    @Singleton
+    fun provideNetworkStatusTracker(@ApplicationContext context: Context): NetworkStatusTracker {
+        return NetworkStatusTracker(context)
     }
 }

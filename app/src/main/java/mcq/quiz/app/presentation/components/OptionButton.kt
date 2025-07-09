@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -77,7 +78,7 @@ fun OptionButton(
         enabled = enabled,
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .defaultMinSize(minHeight = 56.dp)
             .then(
                 if (isProcessing) {
                     Modifier.alpha(processingAlpha)
@@ -101,7 +102,11 @@ fun OptionButton(
             Text(
                 text = text,
                 fontWeight = FontWeight.Medium,
-                modifier = Modifier.weight(1f).padding(4.dp)
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(4.dp),
+                maxLines = Int.MAX_VALUE,
+                overflow = TextOverflow.Visible
             )
 
             if (isProcessing) {

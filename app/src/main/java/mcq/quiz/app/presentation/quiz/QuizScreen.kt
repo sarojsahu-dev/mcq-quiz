@@ -1,15 +1,11 @@
 package mcq.quiz.app.presentation.quiz
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,10 +14,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
@@ -34,14 +30,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -50,7 +41,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mcq.quiz.app.presentation.components.AnswerFeedback
 import mcq.quiz.app.presentation.components.QuestionCard
 import mcq.quiz.app.presentation.components.StreakBadge
-import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,11 +85,14 @@ fun QuizScreen(
                 uiState.isLoading -> {
                     LoadingScreen()
                 }
+
                 uiState.error != null -> {
                     ErrorScreen(
-                        error = uiState.error!!
+                        error = uiState.error!!,
+                        onRetry = if (uiState.showRetry) viewModel::retry else null
                     )
                 }
+
                 uiState.currentQuestion != null -> {
                     QuizContent(
                         uiState = uiState,
@@ -138,6 +131,7 @@ private fun LoadingScreen() {
 @Composable
 private fun ErrorScreen(
     error: String,
+    onRetry: (() -> Unit)? = null
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -153,9 +147,16 @@ private fun ErrorScreen(
                 color = MaterialTheme.colorScheme.error,
                 textAlign = TextAlign.Center
             )
+
+            if (onRetry != null) {
+                Button(onClick = onRetry) {
+                    Text("Retry")
+                }
+            }
         }
     }
 }
+
 
 @Composable
 private fun QuizContent(
@@ -163,33 +164,11 @@ private fun QuizContent(
     onAnswerSelected: (Int) -> Unit,
     onSkipQuestion: () -> Unit
 ) {
-    val density = LocalDensity.current
-    var offsetX by remember { mutableStateOf(0f) }
-    val animatedOffsetX by animateFloatAsState(
-        targetValue = offsetX,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
-    )
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .pointerInput(Unit) {
-                    detectDragGestures(
-                        onDragEnd = {
-                            if (abs(offsetX) > with(density) { 100.dp.toPx() }) {
-                                if (offsetX > 0) {
-                                    onSkipQuestion()
-                                }
-                            }
-                            offsetX = 0f
-                        }
-                    ) { _, dragAmount ->
-                        val newOffset = offsetX + dragAmount.x
-                        offsetX = newOffset.coerceIn(-with(density) { 200.dp.toPx() }, with(density) { 200.dp.toPx() })
-                    }
-                }
-                .offset(x = with(density) { animatedOffsetX.toDp() })
         ) {
             TopSection(
                 questionNumber = uiState.questionNumber,
@@ -291,7 +270,9 @@ private fun BottomSection(
         OutlinedButton(
             onClick = onSkipQuestion,
             enabled = isEnabled,
-            modifier = Modifier.fillMaxWidth().height(48.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
         ) {
             Text("Skip")
         }

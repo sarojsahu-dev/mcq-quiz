@@ -1,5 +1,6 @@
 package mcq.quiz.app.presentation.results
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -36,16 +37,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import mcq.quiz.app.presentation.quiz.QuizViewModel
+import mcq.quiz.app.domain.model.Question
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ResultsScreen(
     onRestartQuiz: () -> Unit,
-    quizViewModel: QuizViewModel = hiltViewModel()
+    resultViewModel: ResultsViewModel,
+    questions: List<Question>
 ) {
-    val result = quizViewModel.getQuizResult()
+    val result = resultViewModel.calculateResults(questions)
+
+    BackHandler {
+        onRestartQuiz()
+    }
 
     Scaffold(
         topBar = {

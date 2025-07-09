@@ -12,7 +12,8 @@ data class QuizUiState(
     val longestStreak: Int = 0,
     val isQuizCompleted: Boolean = false,
     val error: String? = null,
-    val isAnswerProcessing: Boolean = false
+    val isAnswerProcessing: Boolean = false,
+
 ) {
     val currentQuestion: Question?
         get() = questions.getOrNull(currentQuestionIndex)
@@ -25,4 +26,8 @@ data class QuizUiState(
 
     val questionNumber: String
         get() = "${currentQuestionIndex + 1} of ${questions.size}"
+
+    val showRetry: Boolean
+        get() = !isLoading && error == "No internet connection"
+
 }

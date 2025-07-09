@@ -7,14 +7,15 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import mcq.quiz.app.domain.usecase.CalculateResultsUseCase
 import mcq.quiz.app.domain.usecase.GetQuestionsUseCase
+import mcq.quiz.app.utils.NetworkStatus
+import mcq.quiz.app.utils.NetworkStatusTracker
 import javax.inject.Inject
 
 @HiltViewModel
 class QuizViewModel @Inject constructor(
     private val getQuestionsUseCase: GetQuestionsUseCase,
-    private val calculateResultsUseCase: CalculateResultsUseCase
+    private val networkStatusTracker: NetworkStatusTracker
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(QuizUiState())
@@ -22,6 +23,26 @@ class QuizViewModel @Inject constructor(
 
     init {
         loadQuestions()
+        observeNetwork()
+    }
+
+    private fun observeNetwork() {
+        viewModelScope.launch {
+            networkStatusTracker.networkStatus.collect { status ->
+                if (status is NetworkStatus.Unavailable && _uiState.value.questions.isEmpty()) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = "No internet connection"
+                    )
+                }
+            }
+        }
+    }
+
+    fun retry() {
+        if (_uiState.value.error == "No internet connection") {
+            loadQuestions()
+        }
     }
 
     fun loadQuestions() {
@@ -134,6 +155,4 @@ class QuizViewModel @Inject constructor(
             questions = resetQuestions
         )
     }
-
-    fun getQuizResult() = calculateResultsUseCase(_uiState.value.questions)
 }

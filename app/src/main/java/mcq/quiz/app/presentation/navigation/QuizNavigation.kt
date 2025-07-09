@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import mcq.quiz.app.presentation.quiz.QuizScreen
 import mcq.quiz.app.presentation.quiz.QuizViewModel
 import mcq.quiz.app.presentation.results.ResultsScreen
+import mcq.quiz.app.presentation.results.ResultsViewModel
 
 @Composable
 fun QuizNavigation(navController: NavHostController) {
@@ -28,15 +29,18 @@ fun QuizNavigation(navController: NavHostController) {
         }
 
         composable("results") {
-            val quizViewModel: QuizViewModel = hiltViewModel(
+            val quizScreenViewModel: QuizViewModel = hiltViewModel(
                 navController.getBackStackEntry("quiz")
             )
+            val resultViewModel: ResultsViewModel = hiltViewModel()
+
             ResultsScreen(
                 onRestartQuiz = {
                     navController.popBackStack("quiz", inclusive = false)
-                    quizViewModel.restartQuiz()
+                    quizScreenViewModel.restartQuiz()
                 },
-                quizViewModel = quizViewModel
+                resultViewModel = resultViewModel,
+                questions = quizScreenViewModel.uiState.value.questions
             )
         }
     }
