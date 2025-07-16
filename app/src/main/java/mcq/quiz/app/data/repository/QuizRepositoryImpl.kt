@@ -10,7 +10,7 @@ class QuizRepositoryImpl @Inject constructor(
     private val api: QuizApi
 ) : QuizRepository {
 
-    override suspend fun getQuestions(): List<Question> {
-        return api.getQuestions().map { it.toDomain() }
+    override suspend fun getQuestions(url: String): List<Question> {
+        return api.getQuestions(url).map { it.toDomain() }
     }
 }

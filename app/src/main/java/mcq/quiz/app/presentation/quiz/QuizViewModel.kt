@@ -7,7 +7,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import mcq.quiz.app.domain.usecase.GetModuleQuestionsUseCase
 import mcq.quiz.app.domain.usecase.GetQuestionsUseCase
+import mcq.quiz.app.domain.usecase.SaveModuleProgressUseCase
 import mcq.quiz.app.utils.NetworkStatus
 import mcq.quiz.app.utils.NetworkStatusTracker
 import javax.inject.Inject
@@ -15,14 +17,17 @@ import javax.inject.Inject
 @HiltViewModel
 class QuizViewModel @Inject constructor(
     private val getQuestionsUseCase: GetQuestionsUseCase,
+    private val getModuleQuestionsUseCase: GetModuleQuestionsUseCase,
+    private val saveModuleProgressUseCase: SaveModuleProgressUseCase,
     private val networkStatusTracker: NetworkStatusTracker
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(QuizUiState())
     val uiState = _uiState.asStateFlow()
 
+    private var currentModuleId: String? = null
+
     init {
-        loadQuestions()
         observeNetwork()
     }
 
@@ -39,18 +44,12 @@ class QuizViewModel @Inject constructor(
         }
     }
 
-    fun retry() {
-        if (_uiState.value.error == "No internet connection") {
-            loadQuestions()
-        }
-    }
-
-    fun loadQuestions() {
+    fun loadModuleQuestions(questionsUrl: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
 
             try {
-                val questions = getQuestionsUseCase()
+                val questions = getModuleQuestionsUseCase(questionsUrl)
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     questions = questions,
@@ -65,13 +64,22 @@ class QuizViewModel @Inject constructor(
         }
     }
 
+    fun setModuleId(moduleId: String) {
+        currentModuleId = moduleId
+    }
+
+    fun retry() {
+        if (_uiState.value.error == "No internet connection") {
+            _uiState.value = _uiState.value.copy(error = null)
+        }
+    }
+
     fun selectAnswer(answerIndex: Int) {
         val currentState = _uiState.value
         if (currentState.showAnswer || currentState.isAnswerProcessing) return
 
         val currentQuestion = currentState.currentQuestion ?: return
 
-        // Start processing
         _uiState.value = currentState.copy(
             selectedAnswer = answerIndex,
             isAnswerProcessing = true
@@ -84,7 +92,6 @@ class QuizViewModel @Inject constructor(
             val newStreak = if (isCorrect) currentState.currentStreak + 1 else 0
             val newLongestStreak = maxOf(currentState.longestStreak, newStreak)
 
-            // Update the question with user answer
             val updatedQuestions = currentState.questions.toMutableList()
             updatedQuestions[currentState.currentQuestionIndex] = currentQuestion.copy(
                 userAnswer = answerIndex
@@ -99,7 +106,6 @@ class QuizViewModel @Inject constructor(
                 isAnswerProcessing = false
             )
 
-            // Auto advance after showing feedback
             delay(1500)
             nextQuestion()
         }
@@ -111,7 +117,6 @@ class QuizViewModel @Inject constructor(
 
         val currentQuestion = currentState.currentQuestion ?: return
 
-        // Update the question as skipped
         val updatedQuestions = currentState.questions.toMutableList()
         updatedQuestions[currentState.currentQuestionIndex] = currentQuestion.copy(
             isSkipped = true
@@ -130,12 +135,19 @@ class QuizViewModel @Inject constructor(
         val nextIndex = currentState.currentQuestionIndex + 1
 
         if (nextIndex >= currentState.questions.size) {
-            // Quiz completed
+            currentModuleId?.let { moduleId ->
+                viewModelScope.launch {
+                    val correctAnswers = currentState.questions.count {
+                        it.userAnswer == it.correctOptionIndex
+                    }
+                    saveModuleProgressUseCase(moduleId, correctAnswers, currentState.questions.size)
+                }
+            }
+
             _uiState.value = currentState.copy(
                 isQuizCompleted = true
             )
         } else {
-            // Move to next question
             _uiState.value = currentState.copy(
                 currentQuestionIndex = nextIndex,
                 selectedAnswer = null,
