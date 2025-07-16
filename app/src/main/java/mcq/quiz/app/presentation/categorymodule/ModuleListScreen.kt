@@ -42,7 +42,7 @@ import mcq.quiz.app.utils.ModuleStatus
 @Composable
 fun ModuleListScreen(
     onModuleSelected: (CategoryModule) -> Unit,
-    viewModel: ModuleListViewModel = hiltViewModel()
+    viewModel: ModuleListViewModel
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -107,7 +107,7 @@ private fun ModuleListContent(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        items(modules) { module ->
+        items(items  = modules, key = { module -> module.id }) { module ->
             ModuleCard(
                 module = module,
                 progress = moduleProgress[module.id],
